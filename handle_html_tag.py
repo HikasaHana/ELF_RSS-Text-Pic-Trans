@@ -8,9 +8,11 @@ from pyquery import PyQuery as Pq
 
 from ....config import config
 
+#以下为新增模块，请确保已安装
 from PIL import Image, ImageFont, ImageDraw
 import time
-import shutil
+import os
+
 
 # 处理 bbcode
 async def handle_bbcode(html: Pq) -> str:
@@ -159,15 +161,14 @@ async def handle_html_tag(html: Pq) -> str:
     if 0 < config.max_length < len(rss_str):
         rss_str = rss_str[: config.max_length] + "..."
 
-
     # 文字转图片
     text = rss_str
-    fontSize = 28
+    fontSize = 28   #字体大小设置。修改字体、大小会影响到后面的换行、画布长宽以及行距设置，请自行调整。
     lines = []
     line = u''
-    fontPath = r"C:\Windows\Fonts\simhei.ttf"
+    fontPath = r"C:\Windows\Fonts\simhei.ttf"   #默认选用的黑体，会有很多符号显示不全。
     font = ImageFont.truetype(fontPath, fontSize)
-    text = re.sub('\\n', '骉', text)
+    text = re.sub('\\n', '骉', text)    #搞不定换行符转义，摆了
     for word in text:
         if word == '骉':
             lines.append(line)
@@ -188,13 +189,14 @@ async def handle_html_tag(html: Pq) -> str:
     for line in lines:
         dr.text((x, y), line, font=font, fill="#696969")
         y += line_height
+
+    pic_path = r"请自行设置图片保存路径"   #路径是斜杠还是反斜杠，根据自己的操作系统修改。
+    for i in os.listdir(pic_path) :
+        file_data = pic_path + "\" + i
+        os.remove(file_data)
     timeline = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-    if time.strftime('%H%M',time.localtime(time.time())) == '0000':
-        shutil.rmtree(filepath)
-        os.mkdir(filepath)
-        
-    im.save(".\RSS\%s.JPEG" % timeline, 'JPEG', subsampling=0, quality=100)
-    with open(".\RSS\%s.JPEG" % timeline,"rb") as f:
+    im.save(pic_path + "\%s.JPEG" % timeline, 'JPEG', subsampling=0, quality=100)
+    with open(pic_path + "\%s.JPEG" % timeline,"rb") as f:
         img_data = f.read()
         base64_data = base64.b64encode(img_data)
         base64_str = str(base64_data, "utf-8")
@@ -206,4 +208,3 @@ async def handle_html_tag(html: Pq) -> str:
     for url in urls:
         input_info = input_info + '\n' + url
     return input_info
-
